@@ -5,6 +5,7 @@
 #include "CWLaser.h"
 #include "PulseLaser.h"
 #include "Muonium.h"
+#include "Muonium0.h"
 //#include "SOA.h"
 #include "TreeManager.h"
 #include "TreeManager2.h"
@@ -20,8 +21,9 @@ using namespace std;
 typedef std::array< double, 5 > state_type; // (rho_gg, Re(rho_ge_, Im(rho_ge), rho_ee, rho_ion)
 
 
-
 Muonium* mu = 0;
+Muonium0* mu0 = 0;
+
 CWLaser cw( 0, 0, 2, 0.3, 10 );
 PulseLaser pulse( 0, 0, 3, 2e-6, 2e-9, 2.0, 0.1 );
 //SOA soa( {0, 10}, {0, 0}, 6.1e-6, 1/25, 1e-7, 0 );
@@ -71,6 +73,13 @@ void OpticalBloch( const state_type &x , state_type &dxdt , double t )
 
 int main(int argc, char **argv)
 {
+
+	TreeManager2 tManager2( argv[1], simCycle+1, tPitch, &cw, &pulse, false );
+	mu0 = new Muonium0( {X_sf, Y_sf, Z_sf}, T_sf, {VX_sf, VY_sf, VZ_sf} );
+	mu0.Diffusion();
+	tManager2.Fill();
+	tManager2.Close();
+
   /*
     ./DecayEffect filename detune[Hz] (./DecayEffect +1kHz.root 1000)
    */
@@ -106,8 +115,6 @@ int main(int argc, char **argv)
   bulirsch_stoer_dense_out< state_type > stepper( 1e-16, 1e-16, 1.0, 1.0 );
   
   TreeManager tManager( argv[1], simCycle+1, tPitch, &cw, &pulse, false );
-
-  TreeManager2 tManager2( argv[1], simCycle+1, tPitch, &cw, &pulse, false );
 
   const int nEntries = seedTr->GetEntries();
   for( int entry=0; entry<nEntries; entry++ ){
