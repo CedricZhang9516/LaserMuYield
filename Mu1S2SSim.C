@@ -7,6 +7,7 @@
 #include "Muonium.h"
 //#include "SOA.h"
 #include "TreeManager.h"
+#include "TreeManager2.h"
 #include "TROOT.h"
 #include "TTree.h"
 #include "TFile.h"
@@ -124,20 +125,20 @@ int main(int argc, char **argv)
 
 
     double test_Velocity[3]; // (vx, vy, vz)
-    Mu->GetVelocity( 0, test_Velocity[0], test_Velocity[1], test_Velocity[2] );
+    mu->GetVelocity( 0, test_Velocity[0], test_Velocity[1], test_Velocity[2] );
   	cout<<"test_Velocity "<<test_Velocity[0]<<" "<<test_Velocity[1]<<" "<<test_Velocity[2]<<endl;
 
   	double test_Temperature = mu->GetTemperature();
-	double test_SurfaceTime = Mu->GetStartTime();
-	cout<<"test_Temperature "<<test_Temperature<<endl;
-	cout<<"test_SurfaceTime "<<test_SurfaceTime<<endl;
-	
-	double test_SurfacePos[3]; // (vx, vy, vz)
-	double test_SurfaceVelocity[3];
-	Mu->GetPosition( test_SurfaceTime, test_SurfacePos[0], test_SurfacePos[1], test_SurfacePos[2] );
-	Mu->GetVelocity( test_SurfaceTime, test_SurfaceVelocity[0], test_SurfaceVelocity[1], test_SurfaceVelocity[2] );
-	cout<<"test_SurfacePos "<<test_SurfacePos[0]<<" "<<test_SurfacePos[1]<<" "<<test_SurfacePos[2]<<endl;
-	cout<<"test_SurfaceVelocity "<<test_SurfaceVelocity[0]<<" "<<test_SurfaceVelocity[1]<<" "<<test_SurfaceVelocity[2]<<endl;
+  	double test_SurfaceTime = mu->GetStartTime();
+  	cout<<"test_Temperature "<<test_Temperature<<endl;
+  	cout<<"test_SurfaceTime "<<test_SurfaceTime<<endl;
+  	
+  	double test_SurfacePos[3]; // (vx, vy, vz)
+  	double test_SurfaceVelocity[3];
+  	mu->GetPosition( test_SurfaceTime, test_SurfacePos[0], test_SurfacePos[1], test_SurfacePos[2] );
+  	mu->GetVelocity( test_SurfaceTime, test_SurfaceVelocity[0], test_SurfaceVelocity[1], test_SurfaceVelocity[2] );
+  	cout<<"test_SurfacePos "<<test_SurfacePos[0]<<" "<<test_SurfacePos[1]<<" "<<test_SurfacePos[2]<<endl;
+  	cout<<"test_SurfaceVelocity "<<test_SurfaceVelocity[0]<<" "<<test_SurfaceVelocity[1]<<" "<<test_SurfaceVelocity[2]<<endl;
 
     delete mu;
   }

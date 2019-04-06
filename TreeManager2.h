@@ -14,12 +14,13 @@
 
 typedef std::array< double , 5 > state_type;
 
+using namespace std;
 
 class TreeManager2
 {
 
  public:
-  TreeManager2( char* filename, int nPoints, double tPitch, CWLaser* cw, PulseLaser* pulse, bool saveFlag );
+  TreeManager2(const char* filename, int nPoints, double tPitch, CWLaser* cw, PulseLaser* pulse, bool saveFlag );
   ~TreeManager2();
   void operator()( const state_type &x, const double t );
   void Initialize( Muonium* mu );
@@ -78,8 +79,8 @@ TreeManager2::TreeManager2(const char* filename, int nPoints, double tPitch, CWL
 fCW(cw), fPulse(pulse), fDetailSaveFlag(saveFlag), fNPoints( nPoints ), fTPitch(tPitch), fPIndex(0)
 {
 
-  std::string str(filename);
-  string filename2 = "_" + filename;
+  string filename2 = std::string(filename);
+  filename2 = "_" + filename2;
   fFile = new TFile( filename2.c_str(), "RECREATE" );
   fSettingTree = new TTree( "Setting", "Setting" );
   // Calculation setting
