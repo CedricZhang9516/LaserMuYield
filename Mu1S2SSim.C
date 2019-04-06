@@ -15,7 +15,6 @@
 
 
 using namespace boost::numeric::odeint;
-using namespace std;
 
 typedef std::array< double, 5 > state_type; // (rho_gg, Re(rho_ge_, Im(rho_ge), rho_ee, rho_ion)
 
@@ -104,10 +103,7 @@ int main(int argc, char **argv)
 
 
   bulirsch_stoer_dense_out< state_type > stepper( 1e-16, 1e-16, 1.0, 1.0 );
-  
   TreeManager tManager( argv[1], simCycle+1, tPitch, &cw, &pulse, false );
-
-  TreeManager2 tManager2( argv[1], simCycle+1, tPitch, &cw, &pulse, false );
 
   const int nEntries = seedTr->GetEntries();
   for( int entry=0; entry<nEntries; entry++ ){
@@ -123,6 +119,7 @@ int main(int argc, char **argv)
     integrate_const( stepper, OpticalBloch, x , 0.0 , tPitch*simCycle, tPitch , std::ref(tManager) );
     tManager.Fill();
 
+<<<<<<< HEAD
 
     double test_Velocity[3]; // (vx, vy, vz)
     mu->GetVelocity( 0, test_Velocity[0], test_Velocity[1], test_Velocity[2] );
@@ -140,6 +137,8 @@ int main(int argc, char **argv)
   	cout<<"test_SurfacePos "<<test_SurfacePos[0]<<" "<<test_SurfacePos[1]<<" "<<test_SurfacePos[2]<<endl;
   	cout<<"test_SurfaceVelocity "<<test_SurfaceVelocity[0]<<" "<<test_SurfaceVelocity[1]<<" "<<test_SurfaceVelocity[2]<<endl;
 
+=======
+>>>>>>> parent of d78bcdb... Add test TreeManager2
     delete mu;
   }
 
