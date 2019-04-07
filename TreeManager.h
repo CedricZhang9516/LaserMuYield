@@ -13,6 +13,7 @@
 
 typedef std::array< double , 5 > state_type;
 
+using namespace std;
 
 class TreeManager
 {
@@ -22,8 +23,17 @@ class TreeManager
   ~TreeManager();
   void operator()( const state_type &x, const double t );
   void Initialize( Muonium* mu );
-  void Fill() { fTree->Fill(); };
-  void Write() { fFile->Write(); };
+  void Fill() { fTree->Fill();};
+  void Write() { fFile->Write();  };
+  double* GetRho(){
+    static double r[5]; 
+    r[0] = fFinalRho[0];
+    r[1] = fFinalRho[1];
+    r[2] = fFinalRho[2];
+    r[3] = fFinalRho[3];
+    r[4] = fFinalRho[4];
+    return r;
+  };
 
  private:
   Muonium* fMu;

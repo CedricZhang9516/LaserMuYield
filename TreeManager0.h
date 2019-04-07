@@ -24,9 +24,9 @@ class TreeManager0
   TreeManager0(const char* filename);
   ~TreeManager0();
   void operator()( const state_type &x, const double t );
-  void Initialize( Muonium0* mu );
+  void Initialize(  );
 
-  void Fill();// { fTree->Fill(); };
+  void Fill(Muonium0* mu);// { fTree->Fill(); };
   void Write() { fFile->Write(); };
   void Close();
 
@@ -86,6 +86,18 @@ class TreeManager0
   double theta_sf;// = -1;
   double phi_sf;// = -1;
 
+  double decayT;// = -1;
+  double X0;// = -1; 
+  double Y0;// = -1; 
+  double Z0;// = -1; 
+  double vel0;// = -1; 
+  double theta0;// = -1; 
+  double phi0;// = -1;  
+  double Vz0;// = -1;
+  double Vx0;// = -1;
+  double Vy0;// = -1;
+  double Lmfp;// = -1; 
+
 };
 
 
@@ -99,6 +111,18 @@ TreeManager0::TreeManager0(const char* filename)
   fSettingTree->Fill();
 
   fTree = new TTree( "tree", "tree" );
+
+  fTree->Branch("decayT",&decayT,"decayT/D");
+  fTree->Branch("X0",&X0,"X0/D");
+  fTree->Branch("Y0",&Y0,"Y0/D");
+  fTree->Branch("Z0",&Z0,"Z0/D");
+  fTree->Branch("vel0",&vel0,"vel0/D");
+  fTree->Branch("theta0",&theta0,"theta0/D");
+  fTree->Branch("phi0",&phi0,"phi0/D");
+  fTree->Branch("Vz0",&Vz0,"Vz0/D");
+  fTree->Branch("Vx0",&Vx0,"Vx0/D");
+  fTree->Branch("Vy0",&Vy0,"Vy0/D");
+  fTree->Branch("Lmfp",&Lmfp,"Lmfp/D");
 
   fTree->Branch("X_sf",&X_sf,"X_sf/D");
   fTree->Branch("Y_sf",&Y_sf,"Y_sf/D");
@@ -155,9 +179,9 @@ void TreeManager0::Close(){
 
 }
 
-void TreeManager0::Initialize( Muonium0* mu )
+void TreeManager0::Initialize(  )
 {
-  fMu = mu;
+  
   /*
   fPIndex = 0;
 
@@ -171,9 +195,9 @@ void TreeManager0::Initialize( Muonium0* mu )
   */
 }
 
-void TreeManager0::Fill(){
+void TreeManager0::Fill(Muonium0* mu){
 
-  //fMu = mu;
+  fMu = mu;
   fFile->cd();
 
   X_sf = fMu->Get_X_sf();
@@ -186,11 +210,21 @@ void TreeManager0::Fill(){
   theta_sf = fMu->Get_theta_sf();
   phi_sf = fMu->Get_phi_sf();
 
+  decayT = fMu->Get_decayT();// = -1;
+  X0 = fMu->Get_X0();// = -1; 
+  Y0 = fMu->Get_Y0();// = -1; 
+  Z0 = fMu->Get_Z0();// = -1; 
+  vel0 = fMu->Get_vel0();// = -1; 
+  theta0 = fMu->Get_theta0();// = -1; 
+  phi0 = fMu->Get_phi0();// = -1;  
+  Vz0 = fMu->Get_Vz0();// = -1;
+  Vx0 = fMu->Get_Vx0();// = -1;
+  Vy0 = fMu->Get_Vy0();// = -1;
+  Lmfp = fMu->Get_Lmfp();// = -1; 
+
   fTree->Fill();
 
 }
-
-
 
 
 

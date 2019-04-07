@@ -14,8 +14,6 @@
 #include "TFile.h"
 #include "TMath.h"
 
-
-
 using namespace boost::numeric::odeint;
 using namespace std;
 
@@ -74,10 +72,13 @@ void OpticalBloch( const state_type &x , state_type &dxdt , double t )
 
 int main(int argc, char **argv)
 {
-  
+
+
+/*
   double x_dec, y_dec, z_dec, t_dec;
   int Nentries;
-  TFile *Fdlinefile = new TFile("/Users/zhangce/WorkArea/LaserMuYield/Root/SimBeamStop_0406_365_tot7.1e8.root");
+  //TFile *Fdlinefile = new TFile("/Users/zhangce/WorkArea/LaserMuYield/Root/SimBeamStop_0406_365_tot7.1e8.root");
+  TFile *Fdlinefile = new TFile("/Users/zhangce/WorkArea/LaserMuYield/Root/SimBeamStop_0324_365_tot7e8.root");
   TTree * Tdlinefile = (TTree*) Fdlinefile->Get("position");
   Tdlinefile->SetBranchAddress("x", &x_dec);
   Tdlinefile->SetBranchAddress("y", &y_dec);
@@ -87,26 +88,27 @@ int main(int argc, char **argv)
 
   TreeManager0 tManager0( argv[1] );
 	
-  Nentries = 1000;
+  //Nentries = 1000;
 
   for( int entry=0; entry<Nentries; entry++ ){
     if( entry % (Nentries/1000) == 0 ){
       std::cout << entry << "/" << Nentries << "\r" << std::flush;
     }
-
     Tdlinefile->GetEntry(entry);
-    mu0 = new Muonium0( x_dec, y_dec, z_dec, t_dec );
+    //t_dec from the stopping simulation glbt_gen, the mean in the exaple root file is about 0.35 us.
+    mu0 = new Muonium0( x_dec, y_dec, z_dec, (t_dec-350)*1e-9 );
     mu0->Diffusion();
-    if(mu0->Get_flag_sf() == 1){
-      tManager0.Initialize(mu0);
-      tManager0.Fill();
-    }
+    //mu0->Emission();
+    if(mu0->Get_flag_sf() == 1)tManager0.Fill(mu0);
+    //if(mu0->Get_flag_laser_cw() == 1)tManager0.Fill(mu0);
   }
 
   tManager0.Write();
   tManager0.Close();
 
   cout<<"filename Target_"<<argv[1]<<" closed."<<endl;
+*/
+
 
   /*
     ./DecayEffect filename detune[Hz] (./DecayEffect +1kHz.root 1000)
@@ -116,9 +118,9 @@ int main(int argc, char **argv)
   
   string filename2 = std::string(argv[1]);
   filename2 = "/Users/zhangce/WorkArea/LaserMuYield/Root/Target_" + filename2;
-  TFile* itf = new TFile(filename2.c_str());
+  //TFile* itf = new TFile(filename2.c_str());
 
-  //TFile* itf = new TFile("/Users/zhangce/WorkArea/LaserMuYield/Root/Target_output.root");
+  TFile* itf = new TFile("/Users/zhangce/WorkArea/LaserMuYield/Root/masuda_san_1224_tree_Type3_D87000_T322_Nrepeat3231566_Xfree0_Thick7.12_NewGeo0_.root");
   //TFile* itf = new TFile( "/Users/taka/Documents/SPAN/Muonium/20190106SlowMuEnhancement/SlowMuSeed1E7.root" ); // slower than 4e6 mm/s
   TTree* seedTr = 0;
   itf->GetObject( "tree", seedTr );
@@ -148,6 +150,8 @@ int main(int argc, char **argv)
   
   TreeManager tManager( argv[1], simCycle+1, tPitch, &cw, &pulse, false );
 
+  int N[5] = {0,0,0,0,0};
+
   const int nEntries = seedTr->GetEntries();
   for( int entry=0; entry<nEntries; entry++ ){
     if( entry % (nEntries/10) == 0 ){
@@ -162,6 +166,12 @@ int main(int argc, char **argv)
     integrate_const( stepper, OpticalBloch, x , 0.0 , tPitch*simCycle, tPitch , std::ref(tManager) );
     tManager.Fill();
 
+    double* Rho = tManager.GetRho();
+    if(*(Rho+0)==1)N[0]++;
+    if(*(Rho+1)==1)N[1]++;
+    if(*(Rho+2)==1)N[2]++;
+    if(*(Rho+3)==1)N[3]++;
+    if(*(Rho+4)==1)N[4]++;
 
     double test_Velocity[3]; // (vx, vy, vz)
     mu->GetVelocity( 0, test_Velocity[0], test_Velocity[1], test_Velocity[2] );
@@ -184,7 +194,7 @@ int main(int argc, char **argv)
     delete mu;
   }
 
-
+  cout<<N[0]<<" "<<N[1]<<" "<<N[2]<<" "<<N[3]<<" "<<N[4]<<endl;
   tManager.Write();
 
 }

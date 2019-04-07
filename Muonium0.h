@@ -28,8 +28,8 @@ class Muonium0
   std::array<double,3> GetVelocity( double t );
   double GetAbsVelocity( double t );
   double GetStartTime( void ) { return fStartTime; };
-  void SetTemperature( double temp /*[K]*/ );
   double GetTemperature( void ) { return fTemperature; };  // [K]
+  void SetTemperature( double temp /*[K]*/ );
   
   static double GetOmega( double intensity /*[W/mm^2]*/) { return 4*M_PI * beta_ge * intensity; };             // [rad/s] (PRA73,052501,2006 Eq.6)
   static double GetIonizationRate( double intensity /*[W/mm^2]*/ ) { return 2*M_PI * beta_ioni * intensity; }; // [rad/s] (PRA73,052501,2006 Eq.9)
@@ -53,15 +53,24 @@ class Muonium0
 
 
   void Diffusion();
+  std::array<double,3> Emission();
+  std::array<double,3> EmissionPosition(double);
+  bool InsideLaserRegion_cw(double, double, double);
+  bool InsideLaserRegion_pulse(double, double, double);
 
   double Get_decayT(){return decayT;};
   double Get_vel0(){return vel0;};
-  double Get_theta0(){return theta0;};
-  double Get_phi0(){return phi0;};
   double Get_Vx0(){return Vx0;};// = vel0 * sin(theta0) * cos(phi0);
   double Get_Vy0(){return Vy0;};// = vel0 * sin(theta0) * sin(phi0);
   double Get_Vz0(){return Vz0;};// = vel0 * cos(theta0);
   double Get_Lmfp(){return Lmfp;};// = 12*D/(PI * vel0_avrg);//mm
+  double Get_X0(){return X_0;};
+  double Get_Y0(){return Y_0;};
+  double Get_Z0(){return Z_0;};
+  double Get_T0(){return T_0;};
+  double Get_theta0(){return theta0;};
+  double Get_phi0(){return phi0;};
+
 
   double Get_X_sf(){return   X_sf;};
   double Get_Y_sf(){return   Y_sf;};
@@ -74,6 +83,8 @@ class Muonium0
   double Get_phi_sf(){return     phi_sf;};
 
   bool Get_flag_sf(){return flag_sf;};
+  bool Get_flag_laser_cw(){return flag_laser_cw;};
+  bool Get_flag_laser_pulse(){return flag_laser_pulse;};
 
  private:
   static constexpr int nRhos = 5;
@@ -94,10 +105,13 @@ class Muonium0
   double Vx0;// = vel0 * sin(theta0) * cos(phi0);
   double Vy0;// = vel0 * sin(theta0) * sin(phi0);
   double Vz0;// = vel0 * cos(theta0);
+
   double Lmfp;// = 12*D/(PI * vel0_avrg);//mm
   double decayT;
 
   bool flag_sf;
+  bool flag_laser_cw;
+  bool flag_laser_pulse;
   double X_sf ;//= fMu.Get_X_sf();
   double Y_sf ;//= fMu.Get_Y_sf();
   double Z_sf ;//= fMu.Get_Z_sf();
@@ -118,7 +132,7 @@ Muonium0::Muonium0( double pos_x, double pos_y, double pos_z, double t )
   X_0 = pos_x;
   Y_0 = pos_y;
   Z_0 = pos_z;
-  T_0 = t;
+  T_0 = t; //Tbeam
   flag_sf = 0;
 
 }
@@ -142,6 +156,7 @@ void Muonium0::Diffusion(){
   double L = 0;
   double theta, phi;
 
+  tempX = 0;tempY = 0;
   do
   {
     tempX = ((double) rand() / (RAND_MAX)) * 3 * sqrt( 2 * k * T/massMu );
@@ -150,6 +165,7 @@ void Muonium0::Diffusion(){
   
   vel0 = tempX*1000 ; // mm/s
 
+  tempX = 0;tempY = 0;
   // generate time of Mu decay event
   do {
     tempX = ((double) rand() / (RAND_MAX)) * 10e-5;  // t=0~10^-5 s
@@ -177,12 +193,11 @@ void Muonium0::Diffusion(){
 
   Lmfp = 12*D/(PI * vel0_avrg);//mm
   //hLmfp->Fill(Lmfp * 1000);//um
-
+  
   do{
 
     //if(flag_DiffusionTrack==1){DiffusionTrack->SetPoint(N,z,y);}//cout<<"filling track"<<N<<endl;}
-
-    // generate the L step lenth according to Lmfp exp. distri.
+    tempX = 0;tempY = 0;
     do {
       tempX = ((double) rand() / (RAND_MAX)) * 5;  // l=0~0.01 mm
       tempY = ((double) rand() / (RAND_MAX)) * 1/Lmfp;
@@ -209,12 +224,12 @@ void Muonium0::Diffusion(){
       vz = vel0 * cos(theta);
     }
 
-    if (t>decayT) t = -10e-6;
+    //if (t>decayT) t = 100e-6;
 
 
   }while( (z <= 0 && z >= -Thick && t<decayT));
 
-  if(z>=0) flag_sf = 1;
+  if(z>=0 && t<decayT) flag_sf = 1;
   
   X_sf = x;//= fMu.Get_X_sf();
   Y_sf = y;//= fMu.Get_Y_sf();
@@ -225,9 +240,101 @@ void Muonium0::Diffusion(){
   T_sf = T_0 + t;//= fMu.Get_T_sf();
   theta_sf = theta;//= fMu.Get_theta_sf();
   phi_sf = phi;//= fMu.Get_phi_sf();
-  
+
 
 }
+
+std::array<double,3> Muonium0::EmissionPosition( double t){
+
+    double delT = t - (T_sf);
+    double tempX, tempY;
+    
+    double x = X_sf;
+    double y = Y_sf;
+    double z = Z_sf;
+    double vx = VX_sf;
+    double vy = VY_sf;
+    double vz = VZ_sf;
+
+    //if( t < T_sf) cout<<"wrong"<<endl;
+    //if( t > decayT + T_0) cout<<"wrong"<<endl;
+  
+  if(t < T_sf || t > decayT + T_0){
+    x = std::numeric_limits<double>::lowest();
+    y = std::numeric_limits<double>::lowest();
+    z = std::numeric_limits<double>::lowest();
+  }
+  else{
+    x = x + vx * (delT);
+    y = y + vy * (delT);
+    z = z + vz * (delT);
+  }
+  return {x, y, z};
+
+}
+
+std::array<double,3> Muonium0::Emission(){
+
+    double delT = decayT - (T_sf - T_0);
+    double tempX, tempY;
+
+    double x = X_sf;
+    double y = Y_sf;
+    double z = Z_sf;
+    double vx = VX_sf;
+    double vy = VY_sf;
+    double vz = VZ_sf;
+
+    //std::array<double,3> position = EmissionPosition (T_sf + Tstep);
+    std::array<double,3> position = EmissionPosition (T_sf);
+/*
+    for(int i = 0; i < nbinT; i++){
+      
+      if(Tstep*i >= delT)break;
+      x = x + vx * (Tstep);
+      y = y + vy * (Tstep);
+      z = z + vz * (Tstep);
+      t = t + Tstep;
+
+      hZT2D->Fill(TBeam + t, z);
+      if(fabs(y)<=20 && Tstep*i <= delT){
+        if( (MCtype == 1 || MCtype == 3) && flag_xfree == 0 && fabs(x)>20)continue;
+        if( z >= 1 && z <= 6) {hTlaserR->Fill(TBeam + t);}
+        if( z >= (-6-Thick) && z <= (-1-Thick)) {hTlaserL->Fill(TBeam + t);}
+      }
+    }
+*/
+/*
+    DecayX = X_sf + VX_sf * (decayT - t0);
+    DecayY = Y_sf + VY_sf * (decayT - t0);
+    DecayZ = Z_sf + VZ_sf * (decayT - t0);
+    
+    LaserX = X_sf + VX_sf * (tLaser - TBeam - t0 );
+    LaserY = Y_sf + VY_sf * (tLaser - TBeam - t0 );
+    LaserZ = Z_sf + VZ_sf * (tLaser - TBeam - t0 );
+    LaserXp = VX_sf/VZ_sf;
+    LaserYp = VY_sf/VZ_sf;
+    LaserE = 0.5 * massMu * 1e-6 * (VX_sf*VX_sf + VY_sf*VY_sf + VZ_sf*VZ_sf);//v:mm/s, Ek: MeV
+*/    
+    return {x,y,z};
+
+}
+
+bool Muonium0::InsideLaserRegion_cw(double x, double y, double z){
+  
+  if( sqrt((z-2)*(z-2)+y*y)<=0.3 )return true;
+  return false;
+
+
+}
+
+bool Muonium0::InsideLaserRegion_pulse(double x, double y, double z){
+
+  if( sqrt((z-3)*(z-3)+y*y)<=2 )return true;
+  return false;
+  
+}
+
 
 void Muonium0::SetTemperature( double temp )
 {

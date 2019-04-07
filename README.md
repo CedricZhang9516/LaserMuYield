@@ -2,9 +2,14 @@
 
 This program uses ODEint (http://headmyshoulder.github.io/odeint-v2/) and the ROOT library.
 
-Usage:
- [] ./Mu1S2S outputFileName detuning  (./Mu1S2S 1kHz.root 1000)
+Diffusion model is also applied in the aerogel target.
 
+(For the old version of diffusion model, see MuYield)
+
+
+Usage:
+
+ [] ./LaserSim outputFileName detuning  (./Mu1S2S 1kHz.root 1000)
 
  - Mu1S2SSim.C
    It contains the main function. The numerical calculation of the differential equations is done in this code.
@@ -21,12 +26,19 @@ Usage:
    Once it is created, it returns intensity at any position and time.
    So far, this class assumes the pulsed laser is a perfect gaussian beam (the raylength length is implemented) and it propagates along the x-axis as well as the CWLaser.
 
+- Muonium0.h
+   This class represents each muonium in the target. 
+   Diffusion model is applied in this class.
+
+ - TreeManager0.h
+   This class is used to save the calculation results in a TTree and a TFile for only Mu emission process.
+   
  - Muonium.h
-   This class represents each muonium. This class has physical parameters of muonium such as two-photon Rabi frequency coefficient, doppler shift, and stark shifts.
+   This class represents each muonium for laser ionization process. This class has physical parameters of muonium such as two-photon Rabi frequency coefficient, doppler shift, and stark shifts.
    It is also used for the muonium tracking based on its initial position and velocity information.
 
  - TreeManager.h
-   This class is used to save the calculation results in a TTree and a TFile.
+   This class is used to save the calculation results in a TTree and a TFile for ionized Mu.
    When the saveFlag is true, all the values during the calculation are stored; the output file size becomes large.
    When the saveFlag is false, only the initial and final values will be stored.
    The important output parameters:
