@@ -8,11 +8,12 @@
 #include "Muonium0.h"
 //#include "SOA.h"
 #include "TreeManager.h"
-#include "TreeManager2.h"
+#include "TreeManager0.h"
 #include "TROOT.h"
 #include "TTree.h"
 #include "TFile.h"
 #include "TMath.h"
+
 
 
 using namespace boost::numeric::odeint;
@@ -73,20 +74,51 @@ void OpticalBloch( const state_type &x , state_type &dxdt , double t )
 
 int main(int argc, char **argv)
 {
+  
+  double x_dec, y_dec, z_dec, t_dec;
+  int Nentries;
+  TFile *Fdlinefile = new TFile("/Users/zhangce/WorkArea/LaserMuYield/Root/SimBeamStop_0406_365_tot7.1e8.root");
+  TTree * Tdlinefile = (TTree*) Fdlinefile->Get("position");
+  Tdlinefile->SetBranchAddress("x", &x_dec);
+  Tdlinefile->SetBranchAddress("y", &y_dec);
+  Tdlinefile->SetBranchAddress("z", &z_dec);
+  Tdlinefile->SetBranchAddress("glbt_gen", &t_dec);
+  Nentries = Tdlinefile->GetEntries();
 
-	TreeManager2 tManager2( argv[1], simCycle+1, tPitch, &cw, &pulse, false );
-	mu0 = new Muonium0( {X_sf, Y_sf, Z_sf}, T_sf, {VX_sf, VY_sf, VZ_sf} );
-	mu0.Diffusion();
-	tManager2.Fill();
-	tManager2.Close();
+  TreeManager0 tManager0( argv[1] );
+	
+  Nentries = 1000;
+
+  for( int entry=0; entry<Nentries; entry++ ){
+    if( entry % (Nentries/1000) == 0 ){
+      std::cout << entry << "/" << Nentries << "\r" << std::flush;
+    }
+
+    Tdlinefile->GetEntry(entry);
+    mu0 = new Muonium0( x_dec, y_dec, z_dec, t_dec );
+    mu0->Diffusion();
+    if(mu0->Get_flag_sf() == 1){
+      tManager0.Initialize(mu0);
+      tManager0.Fill();
+    }
+  }
+
+  tManager0.Write();
+  tManager0.Close();
+
+  cout<<"filename Target_"<<argv[1]<<" closed."<<endl;
 
   /*
     ./DecayEffect filename detune[Hz] (./DecayEffect +1kHz.root 1000)
    */
 
-
   //TFile* itf = new TFile( "/Users/taka/Documents/SPAN/Muonium/20181230Simulator/MuSeed.root" );
-  TFile* itf = new TFile("/Users/zhangce/WorkArea/LaserMuYield/input.root");
+  
+  string filename2 = std::string(argv[1]);
+  filename2 = "/Users/zhangce/WorkArea/LaserMuYield/Root/Target_" + filename2;
+  TFile* itf = new TFile(filename2.c_str());
+
+  //TFile* itf = new TFile("/Users/zhangce/WorkArea/LaserMuYield/Root/Target_output.root");
   //TFile* itf = new TFile( "/Users/taka/Documents/SPAN/Muonium/20190106SlowMuEnhancement/SlowMuSeed1E7.root" ); // slower than 4e6 mm/s
   TTree* seedTr = 0;
   itf->GetObject( "tree", seedTr );
@@ -118,7 +150,7 @@ int main(int argc, char **argv)
 
   const int nEntries = seedTr->GetEntries();
   for( int entry=0; entry<nEntries; entry++ ){
-    if( entry % (nEntries/100) == 0 ){
+    if( entry % (nEntries/10) == 0 ){
       std::cout << entry << "/" << nEntries << "\r" << std::flush;
     }
 
@@ -133,7 +165,9 @@ int main(int argc, char **argv)
 
     double test_Velocity[3]; // (vx, vy, vz)
     mu->GetVelocity( 0, test_Velocity[0], test_Velocity[1], test_Velocity[2] );
-  	cout<<"test_Velocity "<<test_Velocity[0]<<" "<<test_Velocity[1]<<" "<<test_Velocity[2]<<endl;
+  	
+/*
+    cout<<"test_Velocity "<<test_Velocity[0]<<" "<<test_Velocity[1]<<" "<<test_Velocity[2]<<endl;
 
   	double test_Temperature = mu->GetTemperature();
   	double test_SurfaceTime = mu->GetStartTime();
@@ -146,7 +180,7 @@ int main(int argc, char **argv)
   	mu->GetVelocity( test_SurfaceTime, test_SurfaceVelocity[0], test_SurfaceVelocity[1], test_SurfaceVelocity[2] );
   	cout<<"test_SurfacePos "<<test_SurfacePos[0]<<" "<<test_SurfacePos[1]<<" "<<test_SurfacePos[2]<<endl;
   	cout<<"test_SurfaceVelocity "<<test_SurfaceVelocity[0]<<" "<<test_SurfaceVelocity[1]<<" "<<test_SurfaceVelocity[2]<<endl;
-
+*/
     delete mu;
   }
 

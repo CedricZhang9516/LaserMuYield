@@ -1,5 +1,5 @@
-#ifndef __TREEMANAGER2_HH__
-#define __TREEMANAGER2_HH__
+#ifndef __TREEMANAGER0_HH__
+#define __TREEMANAGER0_HH__
 
 #include <iostream>
 #include <fstream>
@@ -8,6 +8,7 @@
 #include "TROOT.h"
 #include "TTree.h"
 #include "TFile.h"
+#include "Muonium0.h"
 #include "Muonium.h"
 #include "CWLaser.h"
 #include "PulseLaser.h"
@@ -16,25 +17,28 @@ typedef std::array< double , 5 > state_type;
 
 using namespace std;
 
-class TreeManager2
+class TreeManager0
 {
 
  public:
-  TreeManager2(const char* filename, int nPoints, double tPitch, CWLaser* cw, PulseLaser* pulse, bool saveFlag );
-  ~TreeManager2();
+  TreeManager0(const char* filename);
+  ~TreeManager0();
   void operator()( const state_type &x, const double t );
-  void Initialize( Muonium* mu );
-  void Fill() { fTree->Fill(); };
+  void Initialize( Muonium0* mu );
+
+  void Fill();// { fTree->Fill(); };
   void Write() { fFile->Write(); };
+  void Close();
 
  private:
-  Muonium* fMu;
+  Muonium0* fMu;
   CWLaser* fCW;
   PulseLaser* fPulse;
   bool fDetailSaveFlag;
 
   TFile* fFile;
   TTree* fTree;
+  //TTree* tree;
   TTree* fSettingTree;
 
   // Calculation setting
@@ -72,52 +76,47 @@ class TreeManager2
   double fFinalAbsVelocity;
   double fFinalRho[5];
 
+  double X_sf;// = -1; 
+  double Y_sf;// = -1; 
+  double Z_sf;// = -1; 
+  double VX_sf;// = -1; 
+  double VY_sf;// = -1; 
+  double VZ_sf;// = -1;
+  double T_sf;// = -1;
+  double theta_sf;// = -1;
+  double phi_sf;// = -1;
+
 };
 
 
-TreeManager2::TreeManager2(const char* filename, int nPoints, double tPitch, CWLaser* cw, PulseLaser* pulse, bool saveFlag=false ):
-fCW(cw), fPulse(pulse), fDetailSaveFlag(saveFlag), fNPoints( nPoints ), fTPitch(tPitch), fPIndex(0)
+TreeManager0::TreeManager0(const char* filename)
 {
 
   string filename2 = std::string(filename);
-  filename2 = "_" + filename2;
+  filename2 = "/Users/zhangce/WorkArea/LaserMuYield/Root/Target_" + filename2;
   fFile = new TFile( filename2.c_str(), "RECREATE" );
   fSettingTree = new TTree( "Setting", "Setting" );
-  // Calculation setting
-  fSettingTree->Branch( "NPoints", &fNPoints, "NPoints/I" );
-  fSettingTree->Branch( "TPitch", &fTPitch, "TPitch/D" );
-
-  // CW setting
-  fDetuning = cw->GetDetuning() / (2*M_PI); // [/s]
-  cw->GetCenterPosition( fCWPos[0], fCWPos[1], fCWPos[2] );
-  fCWWaist0  = cw->GetWaist0();
-  fCWPower   = cw->GetPower();
-  fCWOnTime  = cw->GetOnTime();
-  fCWOffTime = cw->GetOffTime();
-  fSettingTree->Branch( "Detuning", &fDetuning, "Detuning/D" );
-  fSettingTree->Branch( "CWPosition", fCWPos, "CWPosition[3]/D" );
-  fSettingTree->Branch( "CWWaist0", &fCWWaist0, "CWWaist0/D" );
-  fSettingTree->Branch( "CWPower", &fCWPower, "CWPower/D" );
-  fSettingTree->Branch( "CWOnTime", &fCWOnTime, "CWOnTime/D" );
-  fSettingTree->Branch( "CWOffTime", &fCWOffTime, "CWOffTime/D" );
-
-  // Pulse setting
-  pulse->GetCenterPosition( fPulsePos[0], fPulsePos[1], fPulsePos[2] );
-  fPulseWaist0 = pulse->GetWaist0();
-  fPulseEnergy = pulse->GetEnergy();
-  fSettingTree->Branch( "PulsePosition", fPulsePos, "PulsePosition[3]/D" );
-  fSettingTree->Branch( "PulseWaist0", &fPulseWaist0, "PulseWaist0/D" );
-  fSettingTree->Branch( "PulseEnergy", &fPulseEnergy, "PulseEnergy/D" );
-
   fSettingTree->Fill();
 
+  fTree = new TTree( "tree", "tree" );
 
+  fTree->Branch("X_sf",&X_sf,"X_sf/D");
+  fTree->Branch("Y_sf",&Y_sf,"Y_sf/D");
+  fTree->Branch("Z_sf",&Z_sf,"Z_sf/D");
+  fTree->Branch("VX_sf",&VX_sf,"VX_sf/D");
+  fTree->Branch("VY_sf",&VY_sf,"VY_sf/D");
+  fTree->Branch("VZ_sf",&VZ_sf,"VZ_sf/D");
+  fTree->Branch("T_sf",&T_sf,"T_sf/D");
+  fTree->Branch("theta_sf",&theta_sf,"theta_sf/D");
+  fTree->Branch("phi_sf",&phi_sf,"phi_sf/D");
 
-  fTree = new TTree( "MuTree", "MuTree" );
+/*
   fPos = new double[fNPoints][3]();
   fTime = new double[fNPoints]();
   fRho = new double[fNPoints][5]();
   fIntensity = new double[fNPoints][2]();
+*/
+  /*
   fTree->Branch( "Temperature", &fTemperature, "Temperature/D" );
   if( fDetailSaveFlag ){
     fTree->Branch( "Position", fPos, Form( "Pos[%d][3]/D", fNPoints ) );
@@ -136,12 +135,12 @@ fCW(cw), fPulse(pulse), fDetailSaveFlag(saveFlag), fNPoints( nPoints ), fTPitch(
   fTree->Branch( "FinalVelocity", fFinalVelocity, "FinalVelocity[3]/D" );
   fTree->Branch( "FinalAbsVelocity", &fFinalAbsVelocity, "FinalAbsVelocity/D" );
   fTree->Branch( "FinalRho", fFinalRho, "FinalRho[5]/D" );
-
+  */
   fMu = 0;
 }
 
 
-TreeManager2::~TreeManager2()
+TreeManager0::~TreeManager0()
 {
   fFile->Close();
   delete fFile;
@@ -151,10 +150,15 @@ TreeManager2::~TreeManager2()
   delete[] fIntensity;
 }
 
+void TreeManager0::Close(){
+  fFile->Close();
 
-void TreeManager2::Initialize( Muonium* mu )
+}
+
+void TreeManager0::Initialize( Muonium0* mu )
 {
   fMu = mu;
+  /*
   fPIndex = 0;
 
   fMu->GetVelocity( 0, fVelocity[0], fVelocity[1], fVelocity[2] );
@@ -164,12 +168,35 @@ void TreeManager2::Initialize( Muonium* mu )
   fMu->GetPosition( fSurfaceTime, fSurfacePos[0], fSurfacePos[1], fSurfacePos[2] );
   fMu->GetVelocity( fSurfaceTime, fSurfaceVelocity[0], fSurfaceVelocity[1], fSurfaceVelocity[2] );
   fSurfaceAbsVelocity = fMu->GetAbsVelocity( fSurfaceTime );
+  */
+}
+
+void TreeManager0::Fill(){
+
+  //fMu = mu;
+  fFile->cd();
+
+  X_sf = fMu->Get_X_sf();
+  Y_sf = fMu->Get_Y_sf();
+  Z_sf = fMu->Get_Z_sf();
+  VX_sf = fMu->Get_VX_sf();
+  VY_sf = fMu->Get_VY_sf();
+  VZ_sf = fMu->Get_VZ_sf();
+  T_sf = fMu->Get_T_sf();
+  theta_sf = fMu->Get_theta_sf();
+  phi_sf = fMu->Get_phi_sf();
+
+  fTree->Fill();
+
 }
 
 
 
-void TreeManager2::operator()( const state_type &x, const double t )
+
+
+void TreeManager0::operator()( const state_type &x, const double t )
 {
+  /*
   if( fDetailSaveFlag ){
     fTime[fPIndex] = t;
     fMu->GetPosition( fTime[fPIndex], fPos[fPIndex][0], fPos[fPIndex][1], fPos[fPIndex][2] );
@@ -195,9 +222,10 @@ void TreeManager2::operator()( const state_type &x, const double t )
       fFinalRho[i] = x[i];
     }
   }
+  */
 }
     
   
-#endif //__TREEMANAGER_HH__  
+#endif //__TREEMANAGER0_HH__  
 
 

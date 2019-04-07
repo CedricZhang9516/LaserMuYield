@@ -77,7 +77,10 @@ TreeManager::TreeManager( char* filename, int nPoints, double tPitch, CWLaser* c
 fCW(cw), fPulse(pulse), fDetailSaveFlag(saveFlag), fNPoints( nPoints ), fTPitch(tPitch), fPIndex(0)
 {
 
-  fFile = new TFile( filename, "RECREATE" );
+  std::string filename2 = std::string(filename);
+  filename2 = "/Users/zhangce/WorkArea/LaserMuYield/Root/" + filename2;
+
+  fFile = new TFile( filename2.c_str(), "RECREATE" );
   fSettingTree = new TTree( "Setting", "Setting" );
   // Calculation setting
   fSettingTree->Branch( "NPoints", &fNPoints, "NPoints/I" );
