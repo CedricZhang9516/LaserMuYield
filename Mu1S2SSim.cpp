@@ -150,8 +150,6 @@ int main(int argc, char **argv)
   
   TreeManager tManager( argv[1], simCycle+1, tPitch, &cw, &pulse, false );
 
-  int N[5] = {0,0,0,0,0};
-
   const int nEntries = seedTr->GetEntries();
   for( int entry=0; entry<nEntries; entry++ ){
     if( entry % (nEntries/10) == 0 ){
@@ -167,11 +165,7 @@ int main(int argc, char **argv)
     tManager.Fill();
 
     double* Rho = tManager.GetRho();
-    if(*(Rho+0)==1)N[0]++;
-    if(*(Rho+1)==1)N[1]++;
-    if(*(Rho+2)==1)N[2]++;
-    if(*(Rho+3)==1)N[3]++;
-    if(*(Rho+4)==1)N[4]++;
+    cout<<"Rho "<<*(Rho+0)<<" "<<*(Rho+1)<<" "<<*(Rho+2)<<" "<<*(Rho+3)<<" "<<*(Rho+4)<<endl;    
 
     double test_Velocity[3]; // (vx, vy, vz)
     mu->GetVelocity( 0, test_Velocity[0], test_Velocity[1], test_Velocity[2] );
@@ -194,7 +188,6 @@ int main(int argc, char **argv)
     delete mu;
   }
 
-  cout<<N[0]<<" "<<N[1]<<" "<<N[2]<<" "<<N[3]<<" "<<N[4]<<endl;
   tManager.Write();
 
 }
