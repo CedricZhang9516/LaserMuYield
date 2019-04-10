@@ -9,10 +9,13 @@
 //#include "SOA.h"
 #include "TreeManager.h"
 #include "TreeManager0.h"
+#include "TCanvas.h"
 #include "TROOT.h"
+#include "TH1D.h"
 #include "TTree.h"
 #include "TFile.h"
 #include "TMath.h"
+
 
 using namespace boost::numeric::odeint;
 using namespace std;
@@ -26,6 +29,7 @@ Muonium0* mu0 = 0;
 CWLaser cw( 0, 0, 2, 0.3, 10 );
 PulseLaser pulse( 0, 0, 3, 2e-6, 2e-9, 2.0, 0.1 );
 //SOA soa( {0, 10}, {0, 0}, 6.1e-6, 1/25, 1e-7, 0 );
+
 
 void OpticalBloch( const state_type &x , state_type &dxdt , double t )
 {
@@ -72,13 +76,13 @@ void OpticalBloch( const state_type &x , state_type &dxdt , double t )
 
 int main(int argc, char **argv)
 {
+  
 
 
-/*
   double x_dec, y_dec, z_dec, t_dec;
   int Nentries;
   //TFile *Fdlinefile = new TFile("/Users/zhangce/WorkArea/LaserMuYield/Root/SimBeamStop_0406_365_tot7.1e8.root");
-  TFile *Fdlinefile = new TFile("/Users/zhangce/WorkArea/LaserMuYield/Root/SimBeamStop_0324_365_tot7e8.root");
+  TFile *Fdlinefile = new TFile("/Users/zhangce/WorkArea/LaserMuYield/Root/SimBeamStop_0406_DG275_SUS.root");
   TTree * Tdlinefile = (TTree*) Fdlinefile->Get("position");
   Tdlinefile->SetBranchAddress("x", &x_dec);
   Tdlinefile->SetBranchAddress("y", &y_dec);
@@ -107,7 +111,7 @@ int main(int argc, char **argv)
   tManager0.Close();
 
   cout<<"filename Target_"<<argv[1]<<" closed."<<endl;
-*/
+
 
 
   /*
@@ -118,9 +122,9 @@ int main(int argc, char **argv)
   
   string filename2 = std::string(argv[1]);
   filename2 = "/Users/zhangce/WorkArea/LaserMuYield/Root/Target_" + filename2;
-  //TFile* itf = new TFile(filename2.c_str());
+  TFile* itf = new TFile(filename2.c_str());
 
-  TFile* itf = new TFile("/Users/zhangce/WorkArea/LaserMuYield/Root/masuda_san_1224_tree_Type3_D87000_T322_Nrepeat3231566_Xfree0_Thick7.12_NewGeo0_.root");
+  //TFile* itf = new TFile("/Users/zhangce/WorkArea/LaserMuYield/Root/masuda_san_1224_tree_Type3_D87000_T322_Nrepeat3231566_Xfree0_Thick7.12_NewGeo0_.root");
   //TFile* itf = new TFile( "/Users/taka/Documents/SPAN/Muonium/20190106SlowMuEnhancement/SlowMuSeed1E7.root" ); // slower than 4e6 mm/s
   TTree* seedTr = 0;
   itf->GetObject( "tree", seedTr );
@@ -148,7 +152,8 @@ int main(int argc, char **argv)
 
   bulirsch_stoer_dense_out< state_type > stepper( 1e-16, 1e-16, 1.0, 1.0 );
   
-  TreeManager tManager( argv[1], simCycle+1, tPitch, &cw, &pulse, false );
+  //TreeManager tManager( argv[1], simCycle+1, tPitch, &cw, &pulse, false );
+  TreeManager tManager( argv[1], simCycle+1, tPitch, &cw, &pulse, true );
 
   const int nEntries = seedTr->GetEntries();
   for( int entry=0; entry<nEntries; entry++ ){
@@ -158,19 +163,22 @@ int main(int argc, char **argv)
 
     seedTr->GetEntry( entry );
     mu = new Muonium( {X_sf, Y_sf, Z_sf}, T_sf, {VX_sf, VY_sf, VZ_sf} );
+    //mu = new Muonium( {X_sf, Y_sf, Z_sf}, 0 , {VX_sf, VY_sf, VZ_sf} );
     //mu->SetTemperature( 350. );
     tManager.Initialize( mu );
     state_type x = { 1.0, 0, 0, 0, 0 };
     integrate_const( stepper, OpticalBloch, x , 0.0 , tPitch*simCycle, tPitch , std::ref(tManager) );
     tManager.Fill();
 
+    //testing
+
     double* Rho = tManager.GetRho();
-    cout<<"Rho "<<*(Rho+0)<<" "<<*(Rho+1)<<" "<<*(Rho+2)<<" "<<*(Rho+3)<<" "<<*(Rho+4)<<endl;    
+    //cout<<"Rho "<<*(Rho+0)<<" "<<*(Rho+1)<<" "<<*(Rho+2)<<" "<<*(Rho+3)<<" "<<*(Rho+4)<<endl;    
 
     double test_Velocity[3]; // (vx, vy, vz)
     mu->GetVelocity( 0, test_Velocity[0], test_Velocity[1], test_Velocity[2] );
   	
-/*
+    /*
     cout<<"test_Velocity "<<test_Velocity[0]<<" "<<test_Velocity[1]<<" "<<test_Velocity[2]<<endl;
 
   	double test_Temperature = mu->GetTemperature();
@@ -184,10 +192,12 @@ int main(int argc, char **argv)
   	mu->GetVelocity( test_SurfaceTime, test_SurfaceVelocity[0], test_SurfaceVelocity[1], test_SurfaceVelocity[2] );
   	cout<<"test_SurfacePos "<<test_SurfacePos[0]<<" "<<test_SurfacePos[1]<<" "<<test_SurfacePos[2]<<endl;
   	cout<<"test_SurfaceVelocity "<<test_SurfaceVelocity[0]<<" "<<test_SurfaceVelocity[1]<<" "<<test_SurfaceVelocity[2]<<endl;
-*/
+    */
+
     delete mu;
   }
 
   tManager.Write();
+
 
 }

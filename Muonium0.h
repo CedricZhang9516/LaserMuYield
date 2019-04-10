@@ -22,34 +22,6 @@ class Muonium0
   Muonium0( double pos_x, double pos_y, double pos_z, double t );
   ~Muonium0();
 
-  std::array<double,3> GetPosition( double t, double& x, double& y, double& z );
-  std::array<double,3> GetPosition( double t );
-  std::array<double,3> GetVelocity( double t, double& vx, double& vy, double& vz );
-  std::array<double,3> GetVelocity( double t );
-  double GetAbsVelocity( double t );
-  double GetStartTime( void ) { return fStartTime; };
-  double GetTemperature( void ) { return fTemperature; };  // [K]
-  void SetTemperature( double temp /*[K]*/ );
-  
-  static double GetOmega( double intensity /*[W/mm^2]*/) { return 4*M_PI * beta_ge * intensity; };             // [rad/s] (PRA73,052501,2006 Eq.6)
-  static double GetIonizationRate( double intensity /*[W/mm^2]*/ ) { return 2*M_PI * beta_ioni * intensity; }; // [rad/s] (PRA73,052501,2006 Eq.9)
-  static double Get2ndDoppler( double v/*[mm/s]*/ ) { return Omega_eg/2 * pow(v/2.99792458e11,2); };           // [rad/s] (PRA73,052501,2006 Eq.12)
-  static double GetACStarkShift1S( double intensity /*[W/mm^2]*/) { return 2*M_PI * beta_ac_1S * intensity; }; // [rad/s] for 244 nm (tentatively used for also 355 nm)
-  static double GetACStarkShift2S( double intensity /*[W/mm^2]*/) { return 2*M_PI * beta_ac_2S * intensity; }; // [rad/s] for 244 nm (tentatively used for also 355 nm)
-  static double GetDCStarkShift( double efield /*[V/mm]*/ ) { return 2*M_PI * 4.7E5 * pow(efield,2); };        // [rad/s] (PLA187,247,1994)
-
-  // constants
-  static constexpr double ElectronMass = 0.510998928; // MeV/c^2 (PDG2014)
-  static constexpr double MuonMass     = 105.6583715; // MeV/c^2 (PDG2014)
-  static constexpr double Omega_eg = 2*M_PI * 2455529.002e9; // rad/s (PLA187,247,1994)
-  static constexpr double Lambda_eg = 122.0887467E-6; // mm (PLA187,247,1994)
-
-  static constexpr double GammaS     = 2*M_PI * 1.31; // rad/s (spontaneous decay, PRA73,052501,2006, Table1)
-  static constexpr double GammaDecay = 2*M_PI * 72.442e3; // rad/s (FWHM)
-  static constexpr double beta_ge    =  3.68111e1 * (1+ElectronMass/MuonMass) * (1+ElectronMass/MuonMass) * (1+ElectronMass/MuonMass); // [Hz/(W/mm^2)] (PRA73,052501,2006, Table2 & Eq.43)
-  static constexpr double beta_ac_1S = -2.67827e1 * (1+ElectronMass/MuonMass) * (1+ElectronMass/MuonMass) * (1+ElectronMass/MuonMass); // [Hz/(W/mm^2)] for 244 nm (PRA73,052501,2006, Table4 & Eq.43)
-  static constexpr double beta_ac_2S =  1.39927e2 * (1+ElectronMass/MuonMass) * (1+ElectronMass/MuonMass) * (1+ElectronMass/MuonMass); // [Hz/(W/mm^2)] for 244 nm (PRA73,052501,2006, Table4 & Eq.43)
-  static constexpr double beta_ioni  =  1.20208e2 * (1+ElectronMass/MuonMass) * (1+ElectronMass/MuonMass) * (1+ElectronMass/MuonMass); // [Hz/(W/mm^2)] (PRA73,052501,2006, Table4 & Eq.43)
 
 
   void Diffusion();
@@ -210,22 +182,20 @@ void Muonium0::Diffusion(){
     y = y + vy * (L/vel0);
     z = z + vz * (L/vel0);
 
-    if( (z <= 0 && z >= -Thick) )//(z <= 14.12 && z >= 7) )//(z <= -9 && z >= -11) || (z <= 9 && z >= 7) )
-    {
+    if( (z >= 0 || z <= -Thick) )continue;
+    //if( (z <= 0 && z >= -Thick) )//(z <= 14.12 && z >= 7) )//(z <= -9 && z >= -11) || (z <= 9 && z >= 7) )
+    //{
 
-      tempX = TMath::ACos(-1 + 2 * ((double)rand()/(RAND_MAX)) );
-      tempY = ((double) rand()/(RAND_MAX)) * 2* PI;
+    tempX = TMath::ACos(-1 + 2 * ((double)rand()/(RAND_MAX)) );
+    tempY = ((double) rand()/(RAND_MAX)) * 2* PI;
 
-      theta = tempX;  // [0,+PI] radians
-      phi = tempY; //[0,+2PI] radians
+    theta = tempX;  // [0,+PI] radians
+    phi = tempY; //[0,+2PI] radians
 
-      vx = vel0 * sin(theta) * cos(phi);
-      vy = vel0 * sin(theta) * sin(phi);
-      vz = vel0 * cos(theta);
-    }
-
-    //if (t>decayT) t = 100e-6;
-
+    vx = vel0 * sin(theta) * cos(phi);
+    vy = vel0 * sin(theta) * sin(phi);
+    vz = vel0 * cos(theta);
+    //}
 
   }while( (z <= 0 && z >= -Thick && t<decayT));
 
@@ -334,7 +304,7 @@ bool Muonium0::InsideLaserRegion_pulse(double x, double y, double z){
   return false;
   
 }
-
+/*
 
 void Muonium0::SetTemperature( double temp )
 {
@@ -392,6 +362,6 @@ double Muonium0::GetAbsVelocity( double t )
   return sqrt( v );
 }
 
-
+*/
 
 #endif //__MUONIUM0_HH__
