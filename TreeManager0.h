@@ -23,7 +23,7 @@ class TreeManager0
  public:
   TreeManager0(const char* filename);
   ~TreeManager0();
-  void operator()( const state_type &x, const double t );
+  //void operator()( const state_type &x, const double t );
   void Initialize(  );
 
   void Fill(Muonium0* mu);// { fTree->Fill(); };
@@ -60,11 +60,11 @@ class TreeManager0
 
   int fPIndex;
   double fTemperature;
-  double (*fPos)[3];     // (x , y, z) array
+  //double (*fPos)[3];     // (x , y, z) array
   double fVelocity[3]; // (vx, vy, vz)
-  double* fTime;     // (t) array
-  double (*fRho)[5];     // (rho_gg, Re(rho_ge), Im(rho_ge), rho_ee, rho_ion) array
-  double (*fIntensity)[2];// Intensity array (244, 355)
+  //double* fTime;     // (t) array
+  //double (*fRho)[5];     // (rho_gg, Re(rho_ge), Im(rho_ge), rho_ee, rho_ion) array
+  //double (*fIntensity)[2];// Intensity array (244, 355)
 
   double fSurfacePos[3];
   double fSurfaceVelocity[3];
@@ -168,10 +168,10 @@ TreeManager0::~TreeManager0()
 {
   fFile->Close();
   delete fFile;
-  delete[] fPos;
-  delete[] fTime;
-  delete[] fRho;
-  delete[] fIntensity;
+  //delete[] fPos;
+  //delete[] fTime;
+  //delete[] fRho;
+  //delete[] fIntensity;
 }
 
 void TreeManager0::Close(){
@@ -228,8 +228,8 @@ void TreeManager0::Fill(Muonium0* mu){
 
 
 
-void TreeManager0::operator()( const state_type &x, const double t )
-{
+//void TreeManager0::operator()( const state_type &x, const double t )
+//{
   /*
   if( fDetailSaveFlag ){
     fTime[fPIndex] = t;
@@ -257,7 +257,7 @@ void TreeManager0::operator()( const state_type &x, const double t )
     }
   }
   */
-}
+//}
     
   
 #endif //__TREEMANAGER0_HH__  
