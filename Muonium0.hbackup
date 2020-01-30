@@ -9,7 +9,7 @@
 //Currently we assume target temperature is 322 K and uncertainty size is 5 K.
 
 double D = 87000;// diffussion coefficient mm^2/s
-double T = 317;
+double T = 50;
 double light = 299792458; // m/s
 double massMu = 106.16/light/light; // MeV/c2
 double lifeMu = 2.2e-6; //s

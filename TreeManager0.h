@@ -76,27 +76,27 @@ class TreeManager0
   double fFinalAbsVelocity;
   double fFinalRho[5];
 
-  double X_sf;// = -1; 
-  double Y_sf;// = -1; 
-  double Z_sf;// = -1; 
-  double VX_sf;// = -1; 
-  double VY_sf;// = -1; 
+  double X_sf;// = -1;
+  double Y_sf;// = -1;
+  double Z_sf;// = -1;
+  double VX_sf;// = -1;
+  double VY_sf;// = -1;
   double VZ_sf;// = -1;
   double T_sf;// = -1;
   double theta_sf;// = -1;
   double phi_sf;// = -1;
 
   double decayT;// = -1;
-  double X0;// = -1; 
-  double Y0;// = -1; 
-  double Z0;// = -1; 
-  double vel0;// = -1; 
-  double theta0;// = -1; 
-  double phi0;// = -1;  
+  double X0;// = -1;
+  double Y0;// = -1;
+  double Z0;// = -1;
+  double vel0;// = -1;
+  double theta0;// = -1;
+  double phi0;// = -1;
   double Vz0;// = -1;
   double Vx0;// = -1;
   double Vy0;// = -1;
-  double Lmfp;// = -1; 
+  double Lmfp;// = -1;
 
 };
 
@@ -105,7 +105,7 @@ TreeManager0::TreeManager0(const char* filename)
 {
 
   string filename2 = std::string(filename);
-  filename2 = "/Users/zhangce/WorkArea/LaserMuYield/Root/Target_" + filename2;
+  filename2 = "/Users/zhangce/WorkArea/MuYieldLaser/Root/Target_" + filename2;
   fFile = new TFile( filename2.c_str(), "RECREATE" );
   fSettingTree = new TTree( "Setting", "Setting" );
   fSettingTree->Fill();
@@ -181,13 +181,13 @@ void TreeManager0::Close(){
 
 void TreeManager0::Initialize(  )
 {
-  
+
   /*
   fPIndex = 0;
 
   fMu->GetVelocity( 0, fVelocity[0], fVelocity[1], fVelocity[2] );
   fTemperature = mu->GetTemperature();
-  
+
   fSurfaceTime = fMu->GetStartTime();
   fMu->GetPosition( fSurfaceTime, fSurfacePos[0], fSurfacePos[1], fSurfacePos[2] );
   fMu->GetVelocity( fSurfaceTime, fSurfaceVelocity[0], fSurfaceVelocity[1], fSurfaceVelocity[2] );
@@ -211,16 +211,16 @@ void TreeManager0::Fill(Muonium0* mu){
   phi_sf = fMu->Get_phi_sf();
 
   decayT = fMu->Get_decayT();// = -1;
-  X0 = fMu->Get_X0();// = -1; 
-  Y0 = fMu->Get_Y0();// = -1; 
-  Z0 = fMu->Get_Z0();// = -1; 
-  vel0 = fMu->Get_vel0();// = -1; 
-  theta0 = fMu->Get_theta0();// = -1; 
-  phi0 = fMu->Get_phi0();// = -1;  
+  X0 = fMu->Get_X0();// = -1;
+  Y0 = fMu->Get_Y0();// = -1;
+  Z0 = fMu->Get_Z0();// = -1;
+  vel0 = fMu->Get_vel0();// = -1;
+  theta0 = fMu->Get_theta0();// = -1;
+  phi0 = fMu->Get_phi0();// = -1;
   Vz0 = fMu->Get_Vz0();// = -1;
   Vx0 = fMu->Get_Vx0();// = -1;
   Vy0 = fMu->Get_Vy0();// = -1;
-  Lmfp = fMu->Get_Lmfp();// = -1; 
+  Lmfp = fMu->Get_Lmfp();// = -1;
 
   fTree->Fill();
 
@@ -236,7 +236,7 @@ void TreeManager0::Fill(Muonium0* mu){
     fMu->GetPosition( fTime[fPIndex], fPos[fPIndex][0], fPos[fPIndex][1], fPos[fPIndex][2] );
     fIntensity[fPIndex][0] = fCW->GetIntensity( fPos[fPIndex][0], fPos[fPIndex][1], fPos[fPIndex][2] );
     fIntensity[fPIndex][1] = fPulse->GetIntensity( fPos[fPIndex][0], fPos[fPIndex][1], fPos[fPIndex][2], t );
-    
+
     for( int i=0; i<5; i++ ){
       fRho[fPIndex][i] = x[i];
     }
@@ -258,8 +258,8 @@ void TreeManager0::Fill(Muonium0* mu){
   }
   */
 //}
-    
-  
-#endif //__TREEMANAGER0_HH__  
+
+
+#endif //__TREEMANAGER0_HH__
 
 

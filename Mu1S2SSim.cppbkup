@@ -76,7 +76,7 @@ void OpticalBloch( const state_type &x , state_type &dxdt , double t )
 
 int main(int argc, char **argv)
 {
-
+  
 
 
   double x_dec, y_dec, z_dec, t_dec;
@@ -85,12 +85,7 @@ int main(int argc, char **argv)
   //TFile *Fdlinefile = new TFile("/Users/zhangce/WorkArea/LaserMuYield/Root/SimBeamStop_0406_DG275_SUS_tot.root");
   //TFile *Fdlinefile = new TFile("/Users/zhangce/WorkArea/LaserMuYield/Root/SimBeamStop_0417_DG350_Kapton.root");
   //TFile *Fdlinefile = new TFile("/Users/zhangce/WorkArea/LaserMuYield/Root/SimBeamStop_S2area_191118_5.root");
-  //TFile *Fdlinefile = new TFile("/Users/zhangce/WorkArea/LaserMuYield/Root/SimBeamStop_S2area_191119.root");
-  //TFile *Fdlinefile = new TFile("/Users/zhangce/WorkArea/LaserMuYield/Root/SimBeamStop_191202_tot_NSL.root");
-  //TFile *Fdlinefile = new TFile("/Users/zhangce/WorkArea/LaserMuYield/Root/SimBeamStop_191202_tot.root");
-
-  TFile *Fdlinefile = new TFile("/Users/zhangce/WorkArea/MuYieldLaser/Root/SimBeamStop_191202_tot.root");
-  //TFile *Fdlinefile = new TFile("/Users/zhangce/WorkArea/Mu1S2S/Sline/S-line/Run191215/Mydata/SimBeamStop_191215_tot2.root");
+  TFile *Fdlinefile = new TFile("/Users/zhangce/WorkArea/LaserMuYield/Root/SimBeamStop_S2area_191119.root");
   TTree * Tdlinefile = (TTree*) Fdlinefile->Get("position");
   Tdlinefile->SetBranchAddress("x", &x_dec);
   Tdlinefile->SetBranchAddress("y", &y_dec);
@@ -99,9 +94,8 @@ int main(int argc, char **argv)
   Nentries = Tdlinefile->GetEntries();
 
   TreeManager0 tManager0( argv[1] );
-
+	
   //Nentries = 1000;
-  double N_selection = 0;
 
   for( int entry=0; entry<Nentries; entry++ ){
     if( entry % (Nentries/1000) == 0 ){
@@ -109,8 +103,6 @@ int main(int argc, char **argv)
     }
     Tdlinefile->GetEntry(entry);
     //t_dec from the stopping simulation glbt_gen, the mean in the exaple root file is about 0.35 us.
-
-    if(x_dec*x_dec+y_dec*y_dec>39*39){N_selection++; continue;}
     mu0 = new Muonium0( x_dec, y_dec, z_dec, (t_dec-350)*1e-9 );
     mu0->Diffusion();
     //mu0->Emission();
@@ -122,7 +114,6 @@ int main(int argc, char **argv)
   //tManager0.Close();
 
   cout<<"filename Target_"<<argv[1]<<" closed."<<endl;
-  cout<<"within N_selection "<<N_selection<<endl;
 
 
 
@@ -131,5 +122,88 @@ int main(int argc, char **argv)
    */
 
   //TFile* itf = new TFile( "/Users/taka/Documents/SPAN/Muonium/20181230Simulator/MuSeed.root" );
+  
+
+
+  
+  string filename2 = std::string(argv[1]);
+  filename2 = "/Users/zhangce/WorkArea/LaserMuYield/Root/Target_" + filename2;
+  TFile* itf = new TFile(filename2.c_str());
+
+  //TFile* itf = new TFile("/Users/zhangce/WorkArea/LaserMuYield/Root/masuda_san_1224_tree_Type3_D87000_T322_Nrepeat3231566_Xfree0_Thick7.12_NewGeo0_.root");
+  //TFile* itf = new TFile( "/Users/taka/Documents/SPAN/Muonium/20190106SlowMuEnhancement/SlowMuSeed1E7.root" ); // slower than 4e6 mm/s
+  TTree* seedTr = 0;
+  itf->GetObject( "tree", seedTr );
+  double X_sf=0, Y_sf=0, Z_sf=0, T_sf=0, VX_sf=0, VY_sf=0, VZ_sf=0;
+  seedTr->SetBranchStatus( "*", 0 );
+  seedTr->SetBranchStatus( "*_sf", 1 );
+  seedTr->SetBranchAddress( "X_sf", &X_sf );
+  seedTr->SetBranchAddress( "Y_sf", &Y_sf );
+  seedTr->SetBranchAddress( "Z_sf", &Z_sf );
+  seedTr->SetBranchAddress( "T_sf", &T_sf );
+  seedTr->SetBranchAddress( "VX_sf", &VX_sf );
+  seedTr->SetBranchAddress( "VY_sf", &VY_sf );
+  seedTr->SetBranchAddress( "VZ_sf", &VZ_sf );
+
+
+  cw.SetDetuning( 2*M_PI * atoi(argv[2]) );
+  cw.DumpSetting();
+  pulse.DumpSetting();
+
+
+  constexpr double tPitch = 1e-8; // [s]
+  //constexpr int simCycle = 610;
+  constexpr int simCycle = 210;
+
+
+  bulirsch_stoer_dense_out< state_type > stepper( 1e-16, 1e-16, 1.0, 1.0 );
+  
+  //TreeManager tManager( argv[1], simCycle+1, tPitch, &cw, &pulse, false );
+  TreeManager tManager( argv[1], simCycle+1, tPitch, &cw, &pulse, true );
+
+  const int nEntries = seedTr->GetEntries();
+  for( int entry=0; entry<nEntries; entry++ ){
+    if( entry % (nEntries/10) == 0 ){
+      std::cout << entry << "/" << nEntries << "\r" << std::flush;
+    }
+
+    seedTr->GetEntry( entry );
+    mu = new Muonium( {X_sf, Y_sf, Z_sf}, T_sf, {VX_sf, VY_sf, VZ_sf} );
+    //mu = new Muonium( {X_sf, Y_sf, Z_sf}, 0 , {VX_sf, VY_sf, VZ_sf} );
+    //mu->SetTemperature( 350. );
+    tManager.Initialize( mu );
+    state_type x = { 1.0, 0, 0, 0, 0 };
+    integrate_const( stepper, OpticalBloch, x , 0.0 , tPitch*simCycle, tPitch , std::ref(tManager) );
+    tManager.Fill();
+
+    //testing
+
+    double* Rho = tManager.GetRho();
+    //cout<<"Rho "<<*(Rho+0)<<" "<<*(Rho+1)<<" "<<*(Rho+2)<<" "<<*(Rho+3)<<" "<<*(Rho+4)<<endl;    
+
+    double test_Velocity[3]; // (vx, vy, vz)
+    mu->GetVelocity( 0, test_Velocity[0], test_Velocity[1], test_Velocity[2] );
+  	
+    /*
+    cout<<"test_Velocity "<<test_Velocity[0]<<" "<<test_Velocity[1]<<" "<<test_Velocity[2]<<endl;
+
+  	double test_Temperature = mu->GetTemperature();
+  	double test_SurfaceTime = mu->GetStartTime();
+  	cout<<"test_Temperature "<<test_Temperature<<endl;
+  	cout<<"test_SurfaceTime "<<test_SurfaceTime<<endl;
+  	
+  	double test_SurfacePos[3]; // (vx, vy, vz)
+  	double test_SurfaceVelocity[3];
+  	mu->GetPosition( test_SurfaceTime, test_SurfacePos[0], test_SurfacePos[1], test_SurfacePos[2] );
+  	mu->GetVelocity( test_SurfaceTime, test_SurfaceVelocity[0], test_SurfaceVelocity[1], test_SurfaceVelocity[2] );
+  	cout<<"test_SurfacePos "<<test_SurfacePos[0]<<" "<<test_SurfacePos[1]<<" "<<test_SurfacePos[2]<<endl;
+  	cout<<"test_SurfaceVelocity "<<test_SurfaceVelocity[0]<<" "<<test_SurfaceVelocity[1]<<" "<<test_SurfaceVelocity[2]<<endl;
+    */
+
+    delete mu;
+  }
+
+  tManager.Write();
+
 
 }
